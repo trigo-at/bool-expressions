@@ -2,7 +2,7 @@
 
 const { pipe, flatten, mapRecursive } = require('./utils');
 
-const xOfyPattern = new RegExp('([0-9]*)/([0-9]*)');
+const xOfyPattern = new RegExp('([0-9]+)/([0-9]+)');
 const xOfyOperator = 'x/y';
 const matches = regEx => str => typeof str === 'string' && str.match(regEx);
 const isXofYexpression = matches(xOfyPattern);

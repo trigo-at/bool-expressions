@@ -2,7 +2,6 @@
 
 const { expect } = require('chai');
 const {
-    pipe,
     reduce,
     tokenize,
     structure,
@@ -81,4 +80,3 @@ describe('reduce to missing states', () => {
         ['2/3 a b c', ['a'], ['1/2 b c']],
     ].forEach(executeSpec(reduce));
 });
-
