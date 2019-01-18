@@ -75,6 +75,10 @@ const __evaluate = operators => function __internalEvaluate(structuredExpression
     if (structuredExpression.length === 1) {
         return Array.isArray(leftOperand) ? __internalEvaluate(leftOperand) : leftOperand;
     }
+
+    // the x/y operator is special in that the left operand is not really an operand
+    // and the right operand is not to be continued with folding because
+    // the remaining list belongs to the x/y operation
     return operator === xOfyOperator ?
         operators[operator](leftOperand)(rightOperand) :
         operators[operator](__internalEvaluate([leftOperand]))(__internalEvaluate(rightOperand));
@@ -85,6 +89,7 @@ const resultOperators = {
     AND: op1 => op2 => op1 && op2,
     [xOfyOperator]: op1 => (op2) => {
         const [_, x, y] = op1.match(xOfyPattern);
+        // as soon as x or more of the right operands are true, the function returns true
         return op2.filter(op2Element => op2Element).length >= x;
     },
 };
@@ -115,12 +120,10 @@ const calculate = (expression, state) =>
         evaluate,
     )(expression);
 
-const __augmentOperand = (state, token) => {
-    return {
-        value: state.indexOf(token) >= 0,
-        operand: token,
-    };
-};
+const __augmentOperand = (state, token) => ({
+    value: state.indexOf(token) >= 0,
+    operand: token,
+});
 
 const reductionOperators = {
     OR: op1 => op2 => (op1.value || op2.value ? { value: true } : [op1, 'OR', op2]),
@@ -132,8 +135,12 @@ const reductionOperators = {
     },
     [xOfyOperator]: op1 => (op2) => {
         const [_, x, y] = op1.match(xOfyPattern);
+        // first we check how many of the operands are already true
         const numFulfilled = op2.filter(op => op.value).length;
+        // then we eliminate all true operands from the list and construct a list of their names
+        // so a updated expression with the current remaining requirements can be constructed
         const missing = op2.filter(op => !op.value).reduce((acc, cur) => `${acc}${cur.operand} `, '').trim();
+        // this is then "squashed" into the operand property (even though it's not an operand)
         return numFulfilled >= x ?
             { value: true } :
             {
