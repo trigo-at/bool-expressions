@@ -18,6 +18,7 @@
   "homepage": "https://github.com/trigo-at/spike-bool-expressions#readme",
   "devDependencies": {
     "chai": "^4.2.0",
+    "eslint-config-trigo": "^6.2.1",
     "mocha": "^5.2.0"
   }
 }
