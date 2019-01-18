@@ -4,7 +4,8 @@
   "description": "",
   "main": "lib.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha *.spec.js",
+    "test-watch": "mocha --watch *.spec.js"
   },
   "repository": {
     "type": "git",
