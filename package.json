@@ -1,0 +1,23 @@
+{
+  "name": "spike-bool-expressions",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trigo-at/spike-bool-expressions.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/trigo-at/spike-bool-expressions/issues"
+  },
+  "homepage": "https://github.com/trigo-at/spike-bool-expressions#readme",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0"
+  }
+}
