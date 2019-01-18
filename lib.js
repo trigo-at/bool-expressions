@@ -71,13 +71,13 @@ const structure = tokens => __structure([], tokens);
 
 const __evaluate = operators => function __internalEvaluate(structuredExpression) {
     if (!structuredExpression || structuredExpression.length === 0) return false;
-    const [operand, operator] = structuredExpression;
+    const [leftOperand, operator, ...rightOperand] = structuredExpression;
     if (structuredExpression.length === 1) {
-        return Array.isArray(operand) ? __internalEvaluate(operand) : operand;
+        return Array.isArray(leftOperand) ? __internalEvaluate(leftOperand) : leftOperand;
     }
     return operator === xOfyOperator ?
-        operators[operator](operand)(structuredExpression.slice(2)) :
-        operators[operator](__internalEvaluate([operand]))(__internalEvaluate(structuredExpression.slice(2)));
+        operators[operator](leftOperand)(rightOperand) :
+        operators[operator](__internalEvaluate([leftOperand]))(__internalEvaluate(rightOperand));
 };
 
 const resultOperators = {
