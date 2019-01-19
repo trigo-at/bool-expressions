@@ -42,8 +42,11 @@ const pipe = (...functions) => (arg) => {
     return functions.reduce((acc, cur) => cur(acc), arg);
 };
 
+const matches = regEx => str => typeof str === 'string' && str.match(regEx);
+
 module.exports = {
     flatten,
     mapRecursive,
     pipe,
+    matches,
 };

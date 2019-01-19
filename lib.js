@@ -1,17 +1,25 @@
 'use strict';
 
-const { pipe, flatten, mapRecursive } = require('./utils');
+const { pipe, flatten, mapRecursive, matches } = require('./utils');
 
+const operatorSymbols = {
+    and: 'AND',
+    or: 'OR',
+    xOfy: 'X/Y',
+};
 const xOfyPattern = new RegExp('([0-9]+)/([0-9]+)');
-const xOfyOperator = 'x/y';
-const matches = regEx => str => typeof str === 'string' && str.match(regEx);
+const reservedSymbols = [
+    operatorSymbols.or,
+    operatorSymbols.and,
+    xOfyPattern,
+    '\\(',
+    '\\)',
+];
+const isReserved = token => reservedSymbols.find(symbol => token.match(symbol));
 const isXofYexpression = matches(xOfyPattern);
 const isWhitespace = char => char === ' ';
 const isBraces = char => char === '(' || char === ')';
 const isSeparator = char => isWhitespace(char) || isBraces(char);
-const reservedSymbols = ['OR', 'AND', '\\(', '\\)', xOfyPattern];
-const isReserved = token => reservedSymbols.find(res => token.match(res));
-const isFulfilled = (state, token) => state.indexOf(token) >= 0;
 
 const __tokenize = (result, current, str) => {
     if (!str || str.length === 0) {
@@ -57,7 +65,7 @@ const __structure = (result, tokens) => {
     // insert "x/y" token into structure so that every operator follows
     // the <operand 1> <operator> <operand2> notation
     if (isXofYexpression(currentToken)) {
-        result.push(xOfyOperator);
+        result.push(operatorSymbols.xOfy);
     }
     return __structure(result, tokens.slice(1));
 };
@@ -79,18 +87,19 @@ const __evaluate = operators => function __internalEvaluate(structuredExpression
     // the x/y operator is special in that the left operand is not really an operand
     // and the right operand is not to be continued with folding because
     // the remaining list belongs to the x/y operation
-    return operator === xOfyOperator ?
+    return operator === operatorSymbols.xOfy ?
         operators[operator](leftOperand)(rightOperand) :
         operators[operator](__internalEvaluate([leftOperand]))(__internalEvaluate(rightOperand));
 };
 
 const resultOperators = {
-    OR: op1 => op2 => op1 || op2,
-    AND: op1 => op2 => op1 && op2,
-    [xOfyOperator]: op1 => (op2) => {
-        const [_, x, y] = op1.match(xOfyPattern);
+    [operatorSymbols.or]: left => right => left || right,
+    [operatorSymbols.and]: left => right => left && right,
+    [operatorSymbols.xOfy]: left => (right) => {
+        // eslint-disable-next-line no-unused-vars
+        const [, x, y] = left.match(xOfyPattern);
         // as soon as x or more of the right operands are true, the function returns true
-        return op2.filter(op2Element => op2Element).length >= x;
+        return right.filter(op2Element => op2Element).length >= x;
     },
 };
 
@@ -101,6 +110,8 @@ const resultOperators = {
  * @returns {bool} the result of the boolean expression
  */
 const evaluate = structuredExpression => __evaluate(resultOperators)(structuredExpression);
+
+const isFulfilled = (state, token) => state.indexOf(token) >= 0;
 
 const __booleanize = state => tokens =>
     tokens.map(token => (isReserved(token) ? token : isFulfilled(state, token)));
@@ -121,25 +132,26 @@ const calculate = (expression, state) =>
     )(expression);
 
 const __augmentOperand = (state, token) => ({
-    value: state.indexOf(token) >= 0,
+    value: isFulfilled(state, token),
     operand: token,
 });
 
 const reductionOperators = {
-    OR: op1 => op2 => (op1.value || op2.value ? { value: true } : [op1, 'OR', op2]),
-    AND: op1 => (op2) => {
-        if (op1.value && op2.value) return { value: true };
-        if (op1.value) return [op2];
-        if (op2.value) return [op1];
-        return [op1, 'AND', op2];
+    [operatorSymbols.or]: left => right =>
+        (left.value || right.value ? { value: true } : [left, operatorSymbols.or, right]),
+    [operatorSymbols.and]: left => (right) => {
+        if (left.value && right.value) return { value: true };
+        if (left.value) return [right];
+        if (right.value) return [left];
+        return [left, operatorSymbols.and, right];
     },
-    [xOfyOperator]: op1 => (op2) => {
-        const [_, x, y] = op1.match(xOfyPattern);
+    [operatorSymbols.xOfy]: left => (right) => {
+        const [, x, y] = left.match(xOfyPattern);
         // first we check how many of the operands are already true
-        const numFulfilled = op2.filter(op => op.value).length;
+        const numFulfilled = right.filter(op => op.value).length;
         // then we eliminate all true operands from the list and construct a list of their names
         // so a updated expression with the current remaining requirements can be constructed
-        const missing = op2.filter(op => !op.value).reduce((acc, cur) => `${acc}${cur.operand} `, '').trim();
+        const missing = right.filter(op => !op.value).reduce((acc, cur) => `${acc}${cur.operand} `, '').trim();
         // this is then "squashed" into the operand property (even though it's not an operand)
         return numFulfilled >= x ?
             { value: true } :
@@ -155,13 +167,12 @@ const __reduce = structuredExpression => __evaluate(reductionOperators)(structur
 const __calculateTokens = state => tokens =>
     tokens.map(token => (isReserved(token) ? token : __augmentOperand(state, token)));
 
-const __cleanReducedExpression = expr =>
-    expr.filter(e => !e.value)
-        .map(e => (Array.isArray(e) && e.length === 1 ? e[0] : e))
-        .map(e => e.operand || e);
+const __cleanReducedExpression = expression =>
+    expression.filter(part => !part.value)
+        .map(part => (Array.isArray(part) && part.length === 1 ? part[0] : part))
+        .map(part => part.operand || part);
 
-const __normalizeReductionResult = reductionResult =>
-    (Array.isArray(reductionResult) ? reductionResult : [reductionResult]);
+const __normalizeToArray = obj => (Array.isArray(obj) ? obj : [obj]);
 
 /** Reduces a boolean expression by eliminating all "true" operands and sub expressions
  * @param {string} expression - the boolean expression string
@@ -175,7 +186,7 @@ const reduce = (expression, state) =>
         __calculateTokens(state),
         structure,
         __reduce,
-        __normalizeReductionResult,
+        __normalizeToArray,
         mapRecursive(__cleanReducedExpression),
     )(expression);
 

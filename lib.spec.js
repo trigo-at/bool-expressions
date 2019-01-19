@@ -30,7 +30,7 @@ describe('structuring', () => {
     [
         [['a', 'AND', 'b'], null, ['a', 'AND', 'b']],
         [['(', 'a', 'AND', 'b', ')'], null, [['a', 'AND', 'b']]],
-        [['2/3', 'a', 'b', 'c'], null, ['2/3', 'x/y', 'a', 'b', 'c']],
+        [['2/3', 'a', 'b', 'c'], null, ['2/3', 'X/Y', 'a', 'b', 'c']],
         [['(', '(', 'a', 'AND', 'b', ')', ')', 'OR', 'e'], null, [[['a', 'AND', 'b']], 'OR', 'e']],
         [['(', '(', 'a', 'AND', 'b', ')', 'OR', '(', 'c', 'AND', 'd', ')', ')', 'OR', 'e'], null, [[['a', 'AND', 'b'], 'OR', ['c', 'AND', 'd']], 'OR', 'e']],
     ].forEach(executeSpec(structure));
@@ -38,9 +38,9 @@ describe('structuring', () => {
 
 describe('evaluation', () => {
     [
-        [['2/3', 'x/y', true, true, true], null, true],
-        [['2/3', 'x/y', true, true, false], null, true],
-        [['2/3', 'x/y', true, false, false], null, false],
+        [['2/3', 'X/Y', true, true, true], null, true],
+        [['2/3', 'X/Y', true, true, false], null, true],
+        [['2/3', 'X/Y', true, false, false], null, false],
     ].forEach(executeSpec(evaluate));
 });
 
