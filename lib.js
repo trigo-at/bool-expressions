@@ -6,11 +6,11 @@ const operatorSymbols = {
     and: 'AND',
     or: 'OR',
     xOfy: 'X/Y',
+    not: 'NOT',
 };
 const xOfyPattern = new RegExp('([0-9]+)/([0-9]+)');
 const reservedSymbols = [
-    operatorSymbols.or,
-    operatorSymbols.and,
+    ...Object.values(operatorSymbols),
     xOfyPattern,
     '\\(',
     '\\)',
@@ -62,6 +62,9 @@ const __structure = (result, tokens) => {
         return __structure(result, tokens.slice(numAlreadyProcessedTokens));
     }
 
+    if (currentToken === operatorSymbols.not) {
+        result.push('_');
+    }
     result.push(currentToken);
 
     // insert "x/y" token into structure so that every operator follows
@@ -99,6 +102,7 @@ const __evaluate = operators => function __internalEvaluate(structuredExpression
 };
 
 const resultOperators = {
+    [operatorSymbols.not]: () => right => !right,
     [operatorSymbols.or]: left => right => left || right,
     [operatorSymbols.and]: left => right => left && right,
     [operatorSymbols.xOfy]: left => (right) => {
