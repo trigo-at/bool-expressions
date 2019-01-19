@@ -58,7 +58,7 @@ const __structure = (result, tokens) => {
         // we have to slice off the number of processed tokens + 2 braces per depth level
         // X/Y have to be filtered out because we add them to the expression
         const numAlreadyProcessedTokens =
-            flatResult.result.filter(x => x !== 'X/Y').length + (flatResult.allArrays.length * 2);
+            flatResult.result.filter(x => x !== operatorSymbols.xOfy).length + (flatResult.allArrays.length * 2);
         return __structure(result, tokens.slice(numAlreadyProcessedTokens));
     }
 
