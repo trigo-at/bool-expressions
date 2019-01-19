@@ -1,3 +1,5 @@
+/* eslint max-len: "off" */
+
 'use strict';
 
 const { expect } = require('chai');
@@ -23,6 +25,7 @@ describe('tokenization', () => {
         ['(a AND b)', null, ['(', 'a', 'AND', 'b', ')']],
         ['2/3 a b c', null, ['2/3', 'a', 'b', 'c']],
         ['((a AND b) OR (c AND d)) OR e', null, ['(', '(', 'a', 'AND', 'b', ')', 'OR', '(', 'c', 'AND', 'd', ')', ')', 'OR', 'e']],
+        ['2/3 a b (1/2 c d)', null, ['2/3', 'a', 'b', '(', '1/2', 'c', 'd', ')']],
     ].forEach(executeSpec(tokenize));
 });
 
@@ -33,6 +36,8 @@ describe('structuring', () => {
         [['2/3', 'a', 'b', 'c'], null, ['2/3', 'X/Y', 'a', 'b', 'c']],
         [['(', '(', 'a', 'AND', 'b', ')', ')', 'OR', 'e'], null, [[['a', 'AND', 'b']], 'OR', 'e']],
         [['(', '(', 'a', 'AND', 'b', ')', 'OR', '(', 'c', 'AND', 'd', ')', ')', 'OR', 'e'], null, [[['a', 'AND', 'b'], 'OR', ['c', 'AND', 'd']], 'OR', 'e']],
+        [['2/3', 'a', 'b', '(', '1/2', 'c', 'd', ')'], null, ['2/3', 'X/Y', 'a', 'b', ['1/2', 'X/Y', 'c', 'd']]],
+        [['(', '2/3', 'a', 'b', 'c', ')', 'AND', '(', 'd', 'OR', 'e', ')'], null, [['2/3', 'X/Y', 'a', 'b', 'c'], 'AND', ['d', 'OR', 'e']]],
     ].forEach(executeSpec(structure));
 });
 
@@ -46,6 +51,7 @@ describe('evaluation', () => {
 
 describe('calculate expression result', () => {
     [
+        ['', [], true],
         ['a', ['a'], true],
         ['a', ['b'], false],
         ['a AND b', ['a'], false],
@@ -59,6 +65,10 @@ describe('calculate expression result', () => {
         ['(a AND b) OR (c AND d)', ['a', 'b'], true],
         ['((a AND b) OR (c AND d)) OR e', ['e'], true],
         ['2/3 a b c', ['a', 'b'], true],
+        ['(2/3 a b c)', ['a'], false],
+        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'e', 'g'], true],
+        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd'], false],
+        ['(2/3 a b c) AND (d OR e)', ['a'], false],
         ['(a AND b) OR (c AND d) OR (2/3 a b c)', ['b', 'c'], true],
     ].forEach(executeSpec(calculate));
 });

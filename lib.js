@@ -56,7 +56,9 @@ const __structure = (result, tokens) => {
         result.push(nestedStruct);
         const flatResult = flatten(nestedStruct);
         // we have to slice off the number of processed tokens + 2 braces per depth level
-        const numAlreadyProcessedTokens = flatResult.result.length + (flatResult.allArrays.length * 2);
+        // X/Y have to be filtered out because we add them to the expression
+        const numAlreadyProcessedTokens =
+            flatResult.result.filter(x => x !== 'X/Y').length + (flatResult.allArrays.length * 2);
         return __structure(result, tokens.slice(numAlreadyProcessedTokens));
     }
 
@@ -78,7 +80,10 @@ const __structure = (result, tokens) => {
 const structure = tokens => __structure([], tokens);
 
 const __evaluate = operators => function __internalEvaluate(structuredExpression) {
-    if (!structuredExpression || structuredExpression.length === 0) return false;
+    // if the expression consists of only a value, we return it immediately
+    if (!Array.isArray(structuredExpression)) return structuredExpression;
+    if (structuredExpression.length === 0) return true;
+
     const [leftOperand, operator, ...rightOperand] = structuredExpression;
     if (structuredExpression.length === 1) {
         return Array.isArray(leftOperand) ? __internalEvaluate(leftOperand) : leftOperand;
@@ -87,8 +92,9 @@ const __evaluate = operators => function __internalEvaluate(structuredExpression
     // the x/y operator is special in that the left operand is not really an operand
     // and the right operand is not to be continued with folding because
     // the remaining list belongs to the x/y operation
+    if (!operators[operator]) throw new Error(`Operator ${operator} not supported`);
     return operator === operatorSymbols.xOfy ?
-        operators[operator](leftOperand)(rightOperand) :
+        operators[operator](leftOperand)(rightOperand.map(__internalEvaluate)) :
         operators[operator](__internalEvaluate([leftOperand]))(__internalEvaluate(rightOperand));
 };
 
