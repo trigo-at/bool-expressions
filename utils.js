@@ -38,9 +38,7 @@ const __mapRecursive = action => function __innerRecursion(result, array) {
  */
 const mapRecursive = action => array => __mapRecursive(action)([], array);
 
-const pipe = (...functions) => (arg) => {
-    return functions.reduce((acc, cur) => cur(acc), arg);
-};
+const pipe = (...functions) => arg => functions.reduce((acc, cur) => cur(acc), arg);
 
 const matches = regEx => str => typeof str === 'string' && str.match(regEx);
 
