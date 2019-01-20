@@ -1,7 +1,7 @@
 import { pipe, mapRecursive } from '../utils';
 import { OperatorMap, Operand, isReserved, operatorSymbols, isXofYexpression, xOfyPattern } from './language';
 import structure from './compiler/structure';
-import tokenize from './compiler/tokenizer';
+import tokenize from './compiler/tokenize';
 import execute from './compiler/execute';
 
 const isTrue = operand => (Array.isArray(operand) && operand.length === 0) || (operand && operand.value);

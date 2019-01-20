@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 import { reduce, calculate } from './lib';
-import tokenize from './lib/compiler/tokenizer';
+import tokenize from './lib/compiler/tokenize';
 import structure from './lib/compiler/structure';
 import { evaluate } from './lib/calculate';
 

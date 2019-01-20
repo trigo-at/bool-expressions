@@ -1,6 +1,6 @@
 import { pipe } from '../utils';
 import { OperatorMap, LangSymbol, operatorSymbols, xOfyPattern, isReserved } from './language';
-import tokenize from './compiler/tokenizer';
+import tokenize from './compiler/tokenize';
 import structure from './compiler/structure';
 import execute from './compiler/execute';
 
