@@ -7,6 +7,7 @@ import execute from './compiler/execute';
 const isTrue = operand => (Array.isArray(operand) && operand.length === 0) || (operand && operand.value);
 
 const operators: OperatorMap = {
+    default: () => [],
     [operatorSymbols.not]: () => right =>
         (isTrue(right) ? [operatorSymbols.not, right] : []),
     [operatorSymbols.or]: left => right =>
@@ -20,17 +21,12 @@ const operators: OperatorMap = {
     [operatorSymbols.xOfy]: left => (right) => {
         const [, x, y] = left.match(xOfyPattern);
         // first we check how many of the operands are already true
-        const numFulfilled = right.filter(op => op.value).length;
+        const numFulfilled = right.filter(op => isTrue(op)).length;
         // then we eliminate all true operands from the list and construct a list of their names
         // so a updated expression with the current remaining requirements can be constructed
-        const missing = right.filter(op => !isTrue(op)).reduce((acc, cur) => `${acc}${cur.operand} `, '').trim();
-        // this is then "squashed" into the operand property (even though it's not an operand)
-        return numFulfilled >= x ?
-            { value: true } :
-            {
-                value: false,
-                operand: `${x - numFulfilled}/${y - numFulfilled} ${missing}`,
-            };
+        return numFulfilled >= x ? 
+            [] :
+            [`${x - numFulfilled}/${y - numFulfilled}`, ...right.filter(op => !isTrue(op))];
     },
 };
 

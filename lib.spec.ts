@@ -68,6 +68,7 @@ describe('calculate expression result', () => {
         ['(a AND b) OR (c AND d)', ['a', 'b'], true],
         ['((a AND b) OR (c AND d)) OR e', ['e'], true],
         ['2/3 a b c', ['a', 'b'], true],
+        ['2/3 a (x OR y) c', ['a', 'x'], true],
         ['(2/3 a b c)', ['a'], false],
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'e', 'g'], true],
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd'], false],
@@ -96,6 +97,8 @@ describe('reduce to missing states', () => {
         ['(a AND b) OR (c AND d)', ['a', 'c'], ['b', 'OR', 'd']],
         ['(a AND b) OR (c AND d) OR e', ['a', 'c'], ['b', 'OR', ['d', 'OR', 'e']]],
         ['(a AND b) OR (c AND d)', ['a', 'b'], []],
-        ['2/3 a b c', ['a'], ['1/2 b c']],
+        ['2/3 a b c', ['a'], ['1/2', 'b', 'c']],
+        ['2/3 a (x OR y) c', ['a', 'x'], []],
+        ['2/3 a (x OR y) c', ['a'], ['1/2', ['x', 'OR', 'y'], 'c']],
     ].forEach(executeSpec(reduce));
 });

@@ -5,6 +5,10 @@ export interface Operand {
     operand: string,
 }
 
+export function isOperand(obj: any): obj is Operand {
+    return (<Operand>obj).operand !== undefined;
+}
+
 export type LangSymbol = string | boolean;
 
 export interface OperatorMap {
@@ -26,6 +30,6 @@ export const reservedSymbols = [
     '\\(',
     '\\)',
 ];
-export const isReserved = (token: string): boolean => !!reservedSymbols.find(symbol => !!token.match(symbol));
+export const isReserved = (token: string): boolean => (typeof token === 'string' && !!reservedSymbols.find(symbol => !!token.match(symbol)));
 
 export const isXofYexpression = matches(xOfyPattern);
