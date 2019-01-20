@@ -1,0 +1,31 @@
+import { matches } from '../utils';
+
+export interface Operand {
+    value: boolean,
+    operand: string,
+}
+
+export type LangSymbol = string | boolean;
+
+export interface OperatorMap {
+    [symbol: string]: Function 
+}
+
+export const operatorSymbols = {
+    and: 'AND',
+    or: 'OR',
+    xOfy: 'X/Y',
+    not: 'NOT',
+};
+
+export const xOfyPattern = new RegExp('([0-9]+)/([0-9]+)');
+
+export const reservedSymbols = [
+    ...Object.values(operatorSymbols),
+    xOfyPattern,
+    '\\(',
+    '\\)',
+];
+export const isReserved = (token: string): boolean => !!reservedSymbols.find(symbol => !!token.match(symbol));
+
+export const isXofYexpression = matches(xOfyPattern);

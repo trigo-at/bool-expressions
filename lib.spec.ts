@@ -3,13 +3,10 @@
 'use strict';
 
 import { expect } from 'chai';
-import {
-    reduce,
-    tokenize,
-    structure,
-    evaluate,
-    calculate,
-} from './lib';
+import { reduce, calculate } from './lib';
+import tokenize from './lib/compiler/tokenizer';
+import structure from './lib/compiler/structure';
+import { evaluate } from './lib/calculate';
 
 const executeSpec = testFunction => (testInput) => {
     const [expression, state, expectedResult] = testInput;
