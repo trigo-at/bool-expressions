@@ -20,6 +20,7 @@ const isXofYexpression = matches(xOfyPattern);
 const isWhitespace = char => char === ' ';
 const isBraces = char => char === '(' || char === ')';
 const isSeparator = char => isWhitespace(char) || isBraces(char);
+const isTrue = operand => (Array.isArray(operand) && operand.length === 0) || (operand && operand.value);
 
 const __tokenize = (result, current, str) => {
     if (!str || str.length === 0) {
@@ -146,13 +147,16 @@ const __augmentOperand = (state, token) => ({
     operand: token,
 });
 
+
 const reductionOperators = {
+    [operatorSymbols.not]: () => right =>
+        (isTrue(right) ? [operatorSymbols.not, right] : []),
     [operatorSymbols.or]: left => right =>
-        (left.value || right.value ? { value: true } : [left, operatorSymbols.or, right]),
+        (isTrue(left) || isTrue(right) ? [] : [left, operatorSymbols.or, right]),
     [operatorSymbols.and]: left => (right) => {
-        if (left.value && right.value) return { value: true };
-        if (left.value) return [right];
-        if (right.value) return [left];
+        if (isTrue(left) && isTrue(right)) return [];
+        if (isTrue(left)) return [right];
+        if (isTrue(right)) return [left];
         return [left, operatorSymbols.and, right];
     },
     [operatorSymbols.xOfy]: left => (right) => {
@@ -161,7 +165,7 @@ const reductionOperators = {
         const numFulfilled = right.filter(op => op.value).length;
         // then we eliminate all true operands from the list and construct a list of their names
         // so a updated expression with the current remaining requirements can be constructed
-        const missing = right.filter(op => !op.value).reduce((acc, cur) => `${acc}${cur.operand} `, '').trim();
+        const missing = right.filter(op => !isTrue(op)).reduce((acc, cur) => `${acc}${cur.operand} `, '').trim();
         // this is then "squashed" into the operand property (even though it's not an operand)
         return numFulfilled >= x ?
             { value: true } :
@@ -178,7 +182,7 @@ const __calculateTokens = state => tokens =>
     tokens.map(token => (isReserved(token) ? token : __augmentOperand(state, token)));
 
 const __cleanReducedExpression = expression =>
-    expression.filter(part => !part.value)
+    expression
         .map(part => (Array.isArray(part) && part.length === 1 ? part[0] : part))
         .map(part => part.operand || part);
 

@@ -83,6 +83,12 @@ describe('reduce to missing states', () => {
     [
         ['a OR b', ['a'], []],
         ['a OR b', ['b'], []],
+        ['NOT a', ['a'], ['NOT', 'a']],
+        ['NOT a', ['b'], []],
+        ['NOT a', [], []],
+        // not supported yet
+        // ['NOT (a OR b)', ['a'], ['NOT', ['a', 'OR', 'b']]],
+        // ['NOT (a AND b)', ['a'], ['NOT', ['b']]],
         ['a OR b', [], ['a', 'OR', 'b']],
         ['a OR b OR c', ['b'], []],
         ['a AND b', ['a'], ['b']],
