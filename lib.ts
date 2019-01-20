@@ -1,6 +1,6 @@
 'use strict';
 
-const { pipe, flatten, mapRecursive, matches } = require('./utils');
+import { pipe, flatten, mapRecursive, matches } from './utils';
 
 const operatorSymbols = {
     and: 'AND',
@@ -42,7 +42,7 @@ const __tokenize = (result, current, str) => {
  * @param {string} str - expression string
  * @returns {array} tokenized string
  */
-const tokenize = str => __tokenize([], '', str);
+export const tokenize = str => __tokenize([], '', str);
 
 const __structure = (result, tokens) => {
     // once we are at the end of the token array or encounter a closing brace -> cut off
@@ -81,7 +81,7 @@ const __structure = (result, tokens) => {
  * @param {array} tokens - the flat token array
  * @returns {array} a nested token array, braces removed
  */
-const structure = tokens => __structure([], tokens);
+export const structure = tokens => __structure([], tokens);
 
 const __evaluate = operators => function __internalEvaluate(structuredExpression) {
     // if the expression consists of only a value, we return it immediately
@@ -120,7 +120,7 @@ const resultOperators = {
  * @param {array} structuredExpression - the expression, preprocessed as a nested, tokenized array
  * @returns {bool} the result of the boolean expression
  */
-const evaluate = structuredExpression => __evaluate(resultOperators)(structuredExpression);
+export const evaluate = structuredExpression => __evaluate(resultOperators)(structuredExpression);
 
 const isFulfilled = (state, token) => state.indexOf(token) >= 0;
 
@@ -134,7 +134,7 @@ const __booleanize = state => tokens =>
  * @param {array} state - List of variables which are "true"
  * @returns {bool} Result of the boolean expression
  */
-const calculate = (expression, state) =>
+export const calculate = (expression, state) =>
     pipe(
         tokenize,
         __booleanize(state),
@@ -194,7 +194,7 @@ const __normalizeToArray = obj => (Array.isArray(obj) ? obj : [obj]);
  * @returns {array} A tokenized, structured (nested) array of expressions which have to be fulfilled to get a "true"
  * result from the input expression
  */
-const reduce = (expression, state) =>
+export const reduce = (expression, state) =>
     pipe(
         tokenize,
         __calculateTokens(state),
@@ -204,11 +204,3 @@ const reduce = (expression, state) =>
         mapRecursive(__cleanReducedExpression),
     )(expression);
 
-module.exports = {
-    evaluate,
-    tokenize,
-    structure,
-    reduce,
-    calculate,
-    pipe,
-};

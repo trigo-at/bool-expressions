@@ -2,19 +2,19 @@
 
 'use strict';
 
-const { expect } = require('chai');
-const {
+import { expect } from 'chai';
+import {
     reduce,
     tokenize,
     structure,
     evaluate,
     calculate,
-} = require('./lib');
+} from './lib';
 
 const executeSpec = testFunction => (testInput) => {
     const [expression, state, expectedResult] = testInput;
     it(`should ${testFunction.name} "${expression}" if ${state} to be ${expectedResult}`, () => {
-        expect(testFunction(expression, state)).to.deep.eql(expectedResult);
+        expect(testFunction(expression, state)).to.deep.eq(expectedResult);
     });
 };
 
