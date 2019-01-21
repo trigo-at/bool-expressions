@@ -144,5 +144,14 @@ describe('reduce to missing states', () => {
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd'], ['1/2', 'b', [['1/2', 'e', 'f'], 'AND', ['g', 'OR', 'h']]]],
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'g'], ['1/2', 'b', ['1/2', 'e', 'f']]],
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'f', 'g'], []],
+
+        // same node in several places
+        ['2/3 a a c', ['a'], []],
+        ['a OR a OR a', ['a'], []],
+        ['a AND a AND a', ['a'], []],
+        ['2/3 a (x OR y) a', ['a'], []],
+        ['2/3 a (x OR a) y', ['a'], []],
+        ['2/3 a b ((3/4 a d e f) AND (a OR h))', ['a'], ['1/2', 'b', ['2/3', 'd', 'e', 'f']]],
+
     ].forEach(executeSpec(reduce));
 });
