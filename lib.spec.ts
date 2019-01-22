@@ -1,10 +1,10 @@
 /* eslint max-len: "off" */
 
 import { expect } from 'chai';
-import { reduce, calculate } from '.';
+import { reduce, calculate, fetchVariables } from '.';
+import { evaluate } from './src/calculate';
 import tokenize from './src/compiler/tokenize';
 import structure from './src/compiler/structure';
-import { evaluate } from './src/calculate';
 
 const executeSpec = testFunction => (testInput) => {
     const [expression, state, expectedResult] = testInput;
@@ -89,6 +89,18 @@ describe('calculate expression result', () => {
         ['(2/3 a b c) AND (d OR e)', ['a'], false],
         ['(a AND b) OR (c AND d) OR (2/3 a b c)', ['b', 'c'], true],
     ].forEach(executeSpec(calculate));
+});
+
+describe('fetch all variables from expression', () => {
+    [
+        ['a OR b', null, ['a', 'b']],
+        ['a OR b AND (b AND c)', null, ['a', 'b', 'c']],
+        ['2/3 a b (b AND c AND d)', null, ['a', 'b', 'c', 'd']],
+        ['a', null, ['a']],
+        ['', null, []],
+        [undefined, null, []],
+        [null, null, []],
+    ].forEach(executeSpec(fetchVariables));
 });
 
 describe('reduce to missing states', () => {
