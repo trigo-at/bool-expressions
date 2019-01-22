@@ -32,6 +32,7 @@ const booleanize = (tokens: string[]): LangSymbol[] =>
 
 const validate = (expression: string): boolean => {
     const tokenizedExpression = tokenize(expression);
+    if (tokenizedExpression.length === 0) return true;
     return hasMatchingBraces(tokenizedExpression) && 
         pipe(
             booleanize,
