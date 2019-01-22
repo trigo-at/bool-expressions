@@ -1,20 +1,15 @@
 /* eslint max-len: "off" */
 
-'use strict';
-
-const { expect } = require('chai');
-const {
-    reduce,
-    tokenize,
-    structure,
-    evaluate,
-    calculate,
-} = require('./lib');
+import { expect } from 'chai';
+import { reduce, calculate, fetchVariables } from '.';
+import { evaluate } from './src/calculate';
+import tokenize from './src/compiler/tokenize';
+import structure from './src/compiler/structure';
 
 const executeSpec = testFunction => (testInput) => {
     const [expression, state, expectedResult] = testInput;
     it(`should ${testFunction.name} "${expression}" if ${state} to be ${expectedResult}`, () => {
-        expect(testFunction(expression, state)).to.deep.eql(expectedResult);
+        expect(testFunction(expression, state)).to.deep.eq(expectedResult);
     });
 };
 
@@ -84,6 +79,7 @@ describe('calculate expression result', () => {
         ['(a AND b) OR (c AND d)', ['a', 'b'], true],
         ['((a AND b) OR (c AND d)) OR e', ['e'], true],
         ['2/3 a b c', ['a', 'b'], true],
+        ['2/3 a (x OR y) c', ['a', 'x'], true],
         ['(2/3 a b c)', ['a'], false],
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'e', 'g'], true],
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'b', 'h'], true],
@@ -93,6 +89,18 @@ describe('calculate expression result', () => {
         ['(2/3 a b c) AND (d OR e)', ['a'], false],
         ['(a AND b) OR (c AND d) OR (2/3 a b c)', ['b', 'c'], true],
     ].forEach(executeSpec(calculate));
+});
+
+describe('fetch all variables from expression', () => {
+    [
+        ['a OR b', null, ['a', 'b']],
+        ['a OR b AND (b AND c)', null, ['a', 'b', 'c']],
+        ['2/3 a b (b AND c AND d)', null, ['a', 'b', 'c', 'd']],
+        ['a', null, ['a']],
+        ['', null, []],
+        [undefined, null, []],
+        [null, null, []],
+    ].forEach(executeSpec(fetchVariables));
 });
 
 describe('reduce to missing states', () => {
@@ -129,12 +137,31 @@ describe('reduce to missing states', () => {
         ['(a AND b) OR (c AND d) OR e', ['a', 'c'], ['b', 'OR', ['d', 'OR', 'e']]],
         ['(a AND b) OR (c AND d)', ['a', 'b'], []],
 
-        ['2/3 a b c', ['a'], ['1/2 b c']],
+        ['2/3 a b c', ['a'], ['1/2', 'b', 'c']],
         ['2/3 a b c', ['a', 'b'], []],
         ['2/3 a b c', ['a', 'c'], []],
         ['2/3 a b c', ['b', 'c'], []],
 
-        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a'], ['1/3', 'X/Y', 'b', [['3/4', 'X/Y', 'c', 'd', 'e', 'f'], 'AND', ['g', 'OR', 'h']]]],
+        ['2/3 a (x OR y) c', ['a', 'x'], []],
+        ['2/3 a (x OR y) c', ['a'], ['1/2', ['x', 'OR', 'y'], 'c']],
+
+        ['3/3 a (x OR y) c', [], ['3/3', 'a', ['x', 'OR', 'y'], 'c']], 
+        ['3/3 a (x OR y) c', ['a'], ['2/2', ['x', 'OR', 'y'], 'c']], 
+        ['3/3 a (x OR y) c', ['a', 'c'], ['1/1', ['x', 'OR', 'y']]], // could be reduced to ['x', 'OR', 'y']
+
+        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a'], ['1/2', 'b', [['3/4', 'c', 'd', 'e', 'f'], 'AND', ['g', 'OR', 'h']]]],
+        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'b'], []],
+        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd'], ['1/2', 'b', [['1/2', 'e', 'f'], 'AND', ['g', 'OR', 'h']]]],
+        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'g'], ['1/2', 'b', ['1/2', 'e', 'f']]],
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'f', 'g'], []],
+
+        // same node in several places
+        ['2/3 a a c', ['a'], []],
+        ['a OR a OR a', ['a'], []],
+        ['a AND a AND a', ['a'], []],
+        ['2/3 a (x OR y) a', ['a'], []],
+        ['2/3 a (x OR a) y', ['a'], []],
+        ['2/3 a b ((3/4 a d e f) AND (a OR h))', ['a'], ['1/2', 'b', ['2/3', 'd', 'e', 'f']]],
+
     ].forEach(executeSpec(reduce));
 });

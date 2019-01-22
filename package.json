@@ -1,25 +1,39 @@
 {
-  "name": "spike-bool-expressions",
-  "version": "1.0.0",
-  "description": "",
-  "main": "lib.js",
+  "name": "bool-expressions",
+  "version": "0.1.0",
+  "description": "Compiles, calculates and reduces boolean expressions",
+  "main": "lib/index.js",
+  "types": "lib/index.js.t",
   "scripts": {
-    "test": "mocha *.spec.js",
-    "test-watch": "mocha --watch *.spec.js"
+    "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "lint": "tslint -p tsconfig.json",
+    "test": "mocha --require ts-node/register *spec.ts",
+    "test-watch": "mocha --require ts-node/register --watch --watch-extensions ts *spec.ts"
   },
+  "files": [
+    "lib/**/*"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trigo-at/spike-bool-expressions.git"
+    "url": "git+https://github.com/trigo-at/bool-expressions.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/trigo-at/spike-bool-expressions/issues"
+    "url": "https://github.com/trigo-at/bool-expressions/issues"
   },
-  "homepage": "https://github.com/trigo-at/spike-bool-expressions#readme",
+  "homepage": "https://github.com/trigo-at/bool-expressions#readme",
   "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.5",
     "chai": "^4.2.0",
     "eslint-config-trigo": "^6.2.1",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.12.1",
+    "typescript": "^3.2.4"
   }
 }

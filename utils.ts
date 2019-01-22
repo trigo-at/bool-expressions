@@ -40,9 +40,9 @@ const mapRecursive = action => array => __mapRecursive(action)([], array);
 
 const pipe = (...functions) => arg => functions.reduce((acc, cur) => cur(acc), arg);
 
-const matches = regEx => str => typeof str === 'string' && str.match(regEx);
+const matches = (regEx) => (str): boolean => typeof str === 'string' && !!str.match(regEx);
 
-module.exports = {
+export {
     flatten,
     mapRecursive,
     pipe,
