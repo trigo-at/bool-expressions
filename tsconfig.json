@@ -3,7 +3,7 @@
         "target": "es5",
         "sourceMap": true,
         "lib": ["es2017"],
-        "outDir": "./dist"
+        "outDir": "./lib"
     },
     "compileOnSave": true
 }

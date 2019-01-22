@@ -1,12 +1,10 @@
 /* eslint max-len: "off" */
 
-'use strict';
-
 import { expect } from 'chai';
-import { reduce, calculate } from './lib';
-import tokenize from './lib/compiler/tokenize';
-import structure from './lib/compiler/structure';
-import { evaluate } from './lib/calculate';
+import { reduce, calculate } from '.';
+import tokenize from './src/compiler/tokenize';
+import structure from './src/compiler/structure';
+import { evaluate } from './src/calculate';
 
 const executeSpec = testFunction => (testInput) => {
     const [expression, state, expectedResult] = testInput;
