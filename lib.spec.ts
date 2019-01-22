@@ -1,7 +1,7 @@
 /* eslint max-len: "off" */
 
 import { expect } from 'chai';
-import { reduce, calculate, fetchVariables } from '.';
+import { reduce, calculate, fetchVariables, validate } from '.';
 import { evaluate } from './src/calculate';
 import tokenize from './src/compiler/tokenize';
 import structure from './src/compiler/structure';
@@ -101,6 +101,21 @@ describe('fetch all variables from expression', () => {
         [undefined, null, []],
         [null, null, []],
     ].forEach(executeSpec(fetchVariables));
+});
+
+describe('validate expression', () => {
+    [
+        ['a', null, true],
+        ['a OR', null, false],
+        ['a AND', null, false],
+        ['a AND b OR', null, false],
+        ['2/3 a b c', null, true],
+        ['2/3 a b', null, false],
+        ['x/y a b', null, false],
+        ['complete garbage', null, false],
+        ['(a AND b) OR (c AND d', null, false],
+        ['() AND () OR (())', null, false]
+    ].forEach(executeSpec(validate));
 });
 
 describe('reduce to missing states', () => {
