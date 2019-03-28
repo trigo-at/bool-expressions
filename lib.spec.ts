@@ -147,7 +147,9 @@ describe('validate expression', () => {
 
 describe('reduce to missing states', () => {
     [
+        ['', ['a'], []],
         ['a', ['a'], []],
+        ['a', [], ['a']],
         ['a', ['a', 'b'], []],
         ['a OR b', ['a'], []],
         ['a OR b', ['b'], []],

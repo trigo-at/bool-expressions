@@ -8,6 +8,7 @@ const isTrue = operand => (Array.isArray(operand) && operand.length === 0) || (o
 
 const operators: OperatorMap = {
     default: () => [],
+    term: operand => isTrue(operand) ? [] : operand,
     [operatorSymbols.not]: () => right =>
         (isTrue(right) ? [operatorSymbols.not, right] : []),
     [operatorSymbols.or]: left => right =>
@@ -24,7 +25,7 @@ const operators: OperatorMap = {
         const numFulfilled = right.filter(op => isTrue(op)).length;
         // then we eliminate all true operands from the list and construct a list of their names
         // so a updated expression with the current remaining requirements can be constructed
-        return numFulfilled >= x ? 
+        return numFulfilled >= x ?
             [] :
             [`${x - numFulfilled}/${y - numFulfilled}`, ...right.filter(op => !isTrue(op))];
     },

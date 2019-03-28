@@ -1,6 +1,6 @@
 import { isOperand, OperatorMap } from '../language';
 
-const execute = (operators: OperatorMap) => function __internalEvaluate(structuredExpression) {
+const __execute = (operators: OperatorMap) => function __internalEvaluate(structuredExpression) {
     // if the expression consists of only a value, we return it immediately
     if (!Array.isArray(structuredExpression)) return structuredExpression;
     if (structuredExpression.length === 0) return operators.default();
@@ -16,6 +16,12 @@ const execute = (operators: OperatorMap) => function __internalEvaluate(structur
     return typeof operator === 'boolean' || isOperand(operator) || Array.isArray(operator) ?
         structuredExpression.map(expr => __internalEvaluate(expr)) :
         operators[operator](__internalEvaluate([leftOperand]))(__internalEvaluate(rightOperand));
+};
+
+const execute = (operators: OperatorMap) => structuredExpression => {
+    // evalute the term if the espression only has an operand
+    if (structuredExpression.length === 1 && isOperand(structuredExpression[0])) return operators.term(structuredExpression[0]);
+    return __execute(operators)(structuredExpression);
 };
 
 export default execute;

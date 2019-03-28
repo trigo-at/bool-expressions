@@ -8,6 +8,7 @@ const hasLeftAndRightOperand = (left, right) => left && right;
 
 const operators: OperatorMap = {
     default: () => false,
+    term: () => false,
     [operatorSymbols.or]: left => right => hasLeftAndRightOperand(left, right),
     [operatorSymbols.and]: left => right => hasLeftAndRightOperand(left, right),
     [operatorSymbols.not]: () => right => right,
@@ -33,7 +34,7 @@ const booleanize = (tokens: string[]): LangSymbol[] =>
 const validate = (expression: string): boolean => {
     const tokenizedExpression = tokenize(expression);
     if (tokenizedExpression.length === 0) return true;
-    return hasMatchingBraces(tokenizedExpression) && 
+    return hasMatchingBraces(tokenizedExpression) &&
         pipe(
             booleanize,
             structure,
