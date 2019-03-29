@@ -147,6 +147,11 @@ describe('validate expression', () => {
 
 describe('reduce to missing states', () => {
     [
+        ['', [], []],
+        ['', ['a'], []],
+        ['a', ['a'], []],
+        ['a', [], ['a']],
+        ['a', ['a', 'b'], []],
         ['a OR b', ['a'], []],
         ['a OR b', ['b'], []],
         ['NOT a', ['a'], ['NOT', 'a']],
@@ -187,8 +192,8 @@ describe('reduce to missing states', () => {
         ['2/3 a (x OR y) c', ['a', 'x'], []],
         ['2/3 a (x OR y) c', ['a'], ['1/2', ['x', 'OR', 'y'], 'c']],
 
-        ['3/3 a (x OR y) c', [], ['3/3', 'a', ['x', 'OR', 'y'], 'c']], 
-        ['3/3 a (x OR y) c', ['a'], ['2/2', ['x', 'OR', 'y'], 'c']], 
+        ['3/3 a (x OR y) c', [], ['3/3', 'a', ['x', 'OR', 'y'], 'c']],
+        ['3/3 a (x OR y) c', ['a'], ['2/2', ['x', 'OR', 'y'], 'c']],
         ['3/3 a (x OR y) c', ['a', 'c'], ['1/1', ['x', 'OR', 'y']]], // could be reduced to ['x', 'OR', 'y']
 
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a'], ['1/2', 'b', [['3/4', 'c', 'd', 'e', 'f'], 'AND', ['g', 'OR', 'h']]]],
