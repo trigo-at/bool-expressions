@@ -6,6 +6,7 @@ import execute from './compiler/execute';
 
 const operators: OperatorMap = {
     default: () => true,
+    term: () => true,
     [operatorSymbols.not]: () => right => !right,
     [operatorSymbols.or]: left => right => left || right,
     [operatorSymbols.and]: left => right => left && right,
