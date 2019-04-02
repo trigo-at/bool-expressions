@@ -1,6 +1,6 @@
 {
   "name": "bool-expressions",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Compiles, calculates and reduces boolean expressions",
   "main": "lib/index.js",
   "types": "lib/index.js.t",
