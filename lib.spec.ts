@@ -79,6 +79,12 @@ describe('calculate expression result', () => {
         ['(a AND b) OR (c AND d)', ['a', 'b'], true],
         ['((a AND b) OR (c AND d)) OR e', ['e'], true],
         ['2/3 a b c', ['a', 'b'], true],
+        ['2/3 a b c', ['a'], false],
+        ['2/3 a x y', ['a'], false],
+        ['2/3 x a y', ['a'], false],
+        ['2/3 x y a', ['a'], false],
+        ['(c AND d) OR (2/3 x y a)', ['y'], false],
+        ['(RKARR1 AND GKBRSTART1) OR (2/3 GKBRFORT GKBREND JVPST02)', ['GKBREND'], false],
         ['2/3 a (x OR y) c', ['a', 'x'], true],
         ['(2/3 a b c)', ['a'], false],
         ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'e', 'g'], true],
@@ -204,6 +210,10 @@ describe('reduce to missing states', () => {
 
         // same node in several places
         ['2/3 a a c', ['a'], []],
+        ['2/3 a x y', ['a'], ['1/2', 'x', 'y']],
+        ['2/3 x a y', ['a'], ['1/2', 'x', 'y']],
+        ['2/3 x y a', ['a'], ['1/2', 'x', 'y']],
+        ['(c AND d) OR (2/3 x y a)', ['c', 'a'], ['d', 'OR', ['1/2', 'x', 'y']]],
         ['a OR a OR a', ['a'], []],
         ['a AND a AND a', ['a'], []],
         ['2/3 a (x OR y) a', ['a'], []],

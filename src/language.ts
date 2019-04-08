@@ -12,7 +12,7 @@ export function isOperand(obj: any): obj is Operand {
 export type LangSymbol = string | boolean;
 
 export interface OperatorMap {
-    [symbol: string]: Function 
+    [symbol: string]: Function
 }
 
 export const operatorSymbols = {
@@ -22,10 +22,17 @@ export const operatorSymbols = {
     not: 'NOT',
 };
 
+export const operatorSymbolsRegEx = {
+    and: /^AND$/,
+    or: /^OR$/,
+    xOfy: /^X\/Y$/,
+    not: /^NOT$/,
+};
+
 export const xOfyPattern = new RegExp('([0-9]+)/([0-9]+)');
 
 export const reservedSymbols = [
-    ...Object.values(operatorSymbols),
+    ...Object.values(operatorSymbolsRegEx),
     xOfyPattern,
     '\\(',
     '\\)',
