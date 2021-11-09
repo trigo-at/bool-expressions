@@ -2,8 +2,9 @@
     "compilerOptions": {
         "target": "es5",
         "sourceMap": true,
-        "lib": ["es2017"],
-        "outDir": "./lib"
+        "lib": ["es2017", "dom"],
+        "outDir": "./lib",
+        "downlevelIteration": true,
     },
     "compileOnSave": true
 }
