@@ -1,11 +1,17 @@
-import reduce from './src/reduce';
-import calculate from './src/calculate';
-import fetchVariables from './src/fetchVariables';
-import validate from './src/validate';
+import lexicalAnalyzer from "./src/compiler/p1_lexicalAnalyzer";
+import syntaxAnalyzer from './src/compiler/p2_syntaxAnalyzer';
+import runtime from "./src/runtime";
+import { pipe } from "./utils";
 
-export { 
-    reduce,
-    calculate,
-    fetchVariables,
-    validate,
+export default { 
+    
+    reduce: runtime.reduce,
+    
+    calculate: runtime.runWithTruthArray,
+    
+    fetchVariables: lexicalAnalyzer.getAllIdentifiers,
+    
+    // legacy support for untokenized string inputs
+    validate: (input: string): boolean => pipe(lexicalAnalyzer.tokenize(input), syntaxAnalyzer.validate)(input)
+    
 };
