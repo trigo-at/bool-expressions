@@ -69,8 +69,14 @@ const __optimize = (input: SyntaxNode) : SyntaxNode => {
         return __optimize({
             operator: invertBinaryOperator(operand).operator,
             childs: [
-                invertUnaryOperator(operand.childs[0]),
-                invertUnaryOperator(operand.childs[1]),
+                __optimize({
+                    operator: Operator.not,
+                    childs: [operand.childs[0]],
+                }),
+                __optimize({
+                    operator: Operator.not,
+                    childs: [__optimize(operand.childs[1])],
+                }),
             ]
         })
     }
