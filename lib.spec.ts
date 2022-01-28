@@ -8,6 +8,7 @@ import optimizer from './src/compiler/p5_optimizer';
 import runtime from './src/runtime';
 import { Operator as Op } from "./src/language";
 import sourceGenerator from './src/sourceGenerator';
+import boolExpressions from './index';
 
 chai.use(chaiExclude);
 const expect = chai.expect;
@@ -89,6 +90,7 @@ describe("Phase 2 - Syntax Validator", () => {
         ["NOT a", true],
         ["NOT (a OR b)", true],
         ["NOT (a AND b)", true],
+        ["NOT ((a AND b) OR c)", true],
         ["a AND NOT (b OR c)", true],
         ["a AND NOT (b OR c)", true],
         ["a AND b", true],
@@ -214,7 +216,7 @@ describe('Phase 2: Parser', () => {
 
 describe('Phase 5: Optimization', () => {
     [
-        // Unnecessary nesting
+        // // Unnecessary nesting
         ['(a)', {operator: Op.id, childs: tokenize('a') }],
         ['((a))', {operator: Op.id, childs: tokenize('a') }],
         //['(a) AND (b)', { operator: Op.and, childs: identifiers('a', 'b') }],
@@ -230,10 +232,23 @@ describe('Phase 5: Optimization', () => {
             { operator: Op.not, childs: identifiers('a') },
             { operator: Op.not, childs: identifiers('b') }, ]
         }],
+        ['NOT ((a AND b))', { operator: Op.or, childs: [
+            { operator: Op.not, childs: identifiers('a') },
+            { operator: Op.not, childs: identifiers('b') }, ]
+        }],
         ['NOT (a OR b)', { operator: Op.and, childs: [
             { operator: Op.not, childs: identifiers('a') },
             { operator: Op.not, childs: identifiers('b') }, ]
-        }]
+        }],
+        ['NOT ((a AND b) OR c)', 
+            { operator: Op.and, childs: [  // ((NOT a) OR (NOT b)) AND (NOT c)
+                { operator: Op.or, childs: [ 
+                    { operator: Op.not, childs: identifiers('a') },
+                    { operator: Op.not, childs: identifiers('b') },
+                ]},
+                { operator: Op.not, childs: identifiers('c') }, ]
+            }],
+
     ].forEach(execute(tokenize, syntaxAnalyzer.parse, optimizer.optimize));
 });
 
@@ -252,62 +267,75 @@ describe('Phase 5 - optimize all true expressions away', () => {
         ["NOT a", [], ""],
         ["NOT (a OR b)", ["a"], "NOT a"],
         ["NOT (a AND b)", ["a"], ""],
-        ["NOT (a AND b)", ["a", 'b'], "(NOT a) OR (NOT b)"],
-        ['a OR b', [], 'a OR b'],
+        ["NOT ((a AND b) OR c)", ["a", "b"], "(NOT a) OR (NOT b)"],
+        ["NOT (a AND b)", ["a", "b"], "(NOT a) OR (NOT b)"],
+        ["a OR b", [], "a OR b"],
 
-        ['a OR b OR c', [], '(a OR b) OR c'],
-        ['a OR b OR c', ['a'], ''],
-        ['a OR b OR c', ['b'], ''],
-        ['a OR b OR c', ['c'], ''],
+        ["a OR b OR c", [], "(a OR b) OR c"],
+        ["a OR b OR c", ["a"], ""],
+        ["a OR b OR c", ["b"], ""],
+        ["a OR b OR c", ["c"], ""],
 
         ["a AND b", [], "a AND b"],
         ["a AND b", ["a"], "b"],
-        ['a AND b', ['b'], 'a'],
-        ['a AND b', ['a', 'b'], ''],
+        ["a AND b", ["b"], "a"],
+        ["a AND b", ["a", "b"], ""],
 
-        ['(a AND b) OR c', [], '(a AND b) OR c'],
-        ['(a AND b) OR c', ['a', 'b'], ''],
-        ['(a AND b) OR c', ['a'], 'b OR c'],
-        ['(a AND b) OR c', ['c'], ''],
-        ['(a AND b) OR c', ['a', 'c'], ''],
-        ['(a AND b) OR c', ['b', 'c'], ''],
+        ["(a AND b) OR c", [], "(a AND b) OR c"],
+        ["(a AND b) OR c", ["a", "b"], ""],
+        ["(a AND b) OR c", ["a"], "b OR c"],
+        ["(a AND b) OR c", ["c"], ""],
+        ["(a AND b) OR c", ["a", "c"], ""],
+        ["(a AND b) OR c", ["b", "c"], ""],
 
-        ['a AND b OR c', ['a', 'c'], ''],
-        ['(a AND b) OR (c AND d)', ['a', 'c'], 'b OR d'],
-        ['(a AND b) OR (c AND d) OR e', ['a', 'c'], '(b OR d) OR e'],
-        ['(a AND b) OR (c AND d)', ['a', 'b'], ''],
+        ["a AND b OR c", ["a", "c"], ""],
+        ["(a AND b) OR (c AND d)", ["a", "c"], "b OR d"],
+        ["(a AND b) OR (c AND d) OR e", ["a", "c"], "(b OR d) OR e"],
+        ["(a AND b) OR (c AND d)", ["a", "b"], ""],
 
-        ['2/3 a b c', ['a'], '1/2 b c'],
-        ['2/3 a b c', ['a', 'b'], ''],
-        ['2/3 a b c', ['a', 'c'], ''],
-        ['2/3 a b c', ['b', 'c'], ''],
+        ["2/3 a b c", ["a"], "1/2 b c"],
+        ["2/3 a b c", ["a", "b"], ""],
+        ["2/3 a b c", ["a", "c"], ""],
+        ["2/3 a b c", ["b", "c"], ""],
 
-        ['2/3 a (x OR y) c', ['a', 'x'], ''],
-        ['2/3 a (x OR y) c', ['a'], '1/2 (x OR y) c'],
+        ["2/3 a (x OR y) c", ["a", "x"], ""],
+        ["2/3 a (x OR y) c", ["a"], "1/2 (x OR y) c"],
 
-        ['3/3 a b c', ['a', 'b'], 'c'],
-        ['3/3 a (x OR y) c', [], '3/3 a (x OR y) c'],
-        ['3/3 a (x OR y) c', ['a'], '2/2 (x OR y) c'],
-        ['3/3 a (x OR y) c', ['a', 'c'], 'x OR y'],
+        ["3/3 a b c", ["a", "b"], "c"],
+        ["3/3 a (x OR y) c", [], "3/3 a (x OR y) c"],
+        ["3/3 a (x OR y) c", ["a"], "2/2 (x OR y) c"],
+        ["3/3 a (x OR y) c", ["a", "c"], "x OR y"],
 
-        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a'], '1/2 b ((3/4 c d e f) AND (g OR h))'],
-        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'b'], ''],
-        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd'], '1/2 b ((1/2 e f) AND (g OR h))'],
-        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'g'], '1/2 b (1/2 e f)'],
-        ['2/3 a b ((3/4 c d e f) AND (g OR h))', ['a', 'c', 'd', 'f', 'g'], ''],
+        [
+            "2/3 a b ((3/4 c d e f) AND (g OR h))",
+            ["a"],
+            "1/2 b ((3/4 c d e f) AND (g OR h))",
+        ],
+        ["2/3 a b ((3/4 c d e f) AND (g OR h))", ["a", "b"], ""],
+        [
+            "2/3 a b ((3/4 c d e f) AND (g OR h))",
+            ["a", "c", "d"],
+            "1/2 b ((1/2 e f) AND (g OR h))",
+        ],
+        [
+            "2/3 a b ((3/4 c d e f) AND (g OR h))",
+            ["a", "c", "d", "g"],
+            "1/2 b (1/2 e f)",
+        ],
+        ["2/3 a b ((3/4 c d e f) AND (g OR h))", ["a", "c", "d", "f", "g"], ""],
 
         // same node in several places
-        ['2/3 a a c', ['a'], ''],
-        ['2/3 a x y', ['a'], '1/2 x y'],
-        ['2/3 x a y', ['a'], '1/2 x y'],
-        ['2/3 x y a', ['a'], '1/2 x y'],
-        ['(c AND d) OR (2/3 x y a)', ['c', 'a'], 'd OR (1/2 x y)'],
-        ['a OR a OR a', ['a'], ''],
-        ['a AND a AND a', ['a'], ''],
-        ['2/3 a (x OR y) a', ['a'], ''],
-        ['2/3 a (x OR a) y', ['a'], ''],
-        ['2/3 a b ((3/4 a d e f) AND (a OR h))', ['a'], '1/2 b (2/3 d e f)'],
-    ].forEach(execute(Trump));
+        ["2/3 a a c", ["a"], ""],
+        ["2/3 a x y", ["a"], "1/2 x y"],
+        ["2/3 x a y", ["a"], "1/2 x y"],
+        ["2/3 x y a", ["a"], "1/2 x y"],
+        ["(c AND d) OR (2/3 x y a)", ["c", "a"], "d OR (1/2 x y)"],
+        ["a OR a OR a", ["a"], ""],
+        ["a AND a AND a", ["a"], ""],
+        ["2/3 a (x OR y) a", ["a"], ""],
+        ["2/3 a (x OR a) y", ["a"], ""],
+        ["2/3 a b ((3/4 a d e f) AND (a OR h))", ["a"], "1/2 b (2/3 d e f)"],
+    ].forEach(execute(boolExpressions.reduce));
 });
 
 
@@ -346,6 +374,7 @@ describe("Runtime - with truth array input", () => {
         ["NOT a", [], true],
         ["NOT (a OR b)", ["a"], false],
         ["NOT (a AND b)", ["a"], true],
+        ["NOT ((a AND b) OR c)", ["a", "b"], false],
         ["a AND NOT (b OR c)", ["a"], true],
         ["a AND NOT (b OR c)", ["a", "b"], false],
         ["a AND b", ["a"], false],

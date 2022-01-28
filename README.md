@@ -1,1 +1,3 @@
-# spike-bool-expressions
+# Boolean Expression Compiler
+
+v4
