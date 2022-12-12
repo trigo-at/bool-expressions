@@ -1,6 +1,6 @@
 {
   "name": "@trigo/bool-expressions",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "Compiles, calculates and reduces boolean expressions",
   "main": "lib/index.js",
   "types": "lib/index.js.t",
