@@ -21,7 +21,7 @@ export const isSeparator = (char: string): char is Separator => isWhitespace(cha
 const isBooleanOperator = (token: string): token is Operator => Object.values(BooleanOperator).some((o) => o === token);
 
 const advancedOperators = new Map([
-    [Operator.xOfy, (token) => token.match(/^\d\/\d$/)],
+    [Operator.xOfy, (token) => token.match(/^\d+\/\d+$/)],
 ]);
 
 const identifyAdvancedOperator = (token: string): Operator => {

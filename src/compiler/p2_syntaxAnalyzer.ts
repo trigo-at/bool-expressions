@@ -106,10 +106,10 @@ const createNode = (parent: OperatorNode, level: number): OperatorNode => ({
 const __parse = (tokens: Token[], currentNode: OperatorNode, tree: OperatorNode): OperatorNode => {
     // console.log("▶", { currentNode, tokens });
     const [nextToken, tokenAfterTheNext] = tokens;
-    
+
     if (!nextToken) {
         // console.log("🛑", { currentNode });
-        if (currentNode && isOperator(currentNode) && currentNode.operator === Operator.unknown) 
+        if (currentNode && isOperator(currentNode) && currentNode.operator === Operator.unknown)
             currentNode.operator = Operator.id;
         return tree;
     }
@@ -139,7 +139,7 @@ const __parse = (tokens: Token[], currentNode: OperatorNode, tree: OperatorNode)
         currentNode.childs.push(nextLevel);
         return __parse(tokens.slice(1), nextLevel, tree);
     }
-    
+
     // console.log("🔄", { currentNode, tokens });
     if (nextToken[0] === TokenType.identifier) {
         currentNode.childs.push(nextToken);
@@ -150,23 +150,23 @@ const __parse = (tokens: Token[], currentNode: OperatorNode, tree: OperatorNode)
             const lower = createNode(currentNode, currentNode.debug.level + 1);
             lower.operator = currentNode.operator
             lower.childs = currentNode.childs;
-            
+
             currentNode.childs = [lower];
             currentNode.operator = identifyOperator(nextToken[1]);
-            
+
             //return pass1(tokens.slice(1), currentNode, tree);
         }
         else {
             currentNode.operator = identifyOperator(nextToken[1]);
             if (currentNode.operator === Operator.xOfy) {
                 currentNode.operatorParameter = {
-                    x: Number.parseInt(nextToken[1].match(/^(\d)\/(\d)$/)[1]),
-                    y: Number.parseInt(nextToken[1].match(/^(\d)\/(\d)$/)[2]),
+                    x: Number.parseInt(nextToken[1].match(/^(\d+)\/(\d+)$/)[1]),
+                    y: Number.parseInt(nextToken[1].match(/^(\d+)\/(\d+)$/)[2]),
                 };
             }
         }
     }
-    return __parse(tokens.slice(1), currentNode, tree); 
+    return __parse(tokens.slice(1), currentNode, tree);
 }
 
 /**
@@ -176,7 +176,7 @@ const __parse = (tokens: Token[], currentNode: OperatorNode, tree: OperatorNode)
  */
 const parse = (tokens: Token[]): SyntaxParsingResult => {
     const root = createNode(null, 0);
-    try { 
+    try {
         const result = __parse(tokens, root, root);
         return result.childs.length === 0 ? null : result;
     }
@@ -196,9 +196,9 @@ const __validate = (ast: SyntaxNode) : boolean => {
         return ast.childs && ast.childs.length === 2  && ast.childs.every(__validate);
     }
     if (isNaryOperator(ast)) {
-        return ast.childs && 
-            ast.childs.length > 0 && 
-            ast.childs.every(__validate) && 
+        return ast.childs &&
+            ast.childs.length > 0 &&
+            ast.childs.every(__validate) &&
             !!ast.operatorParameter.x && !!ast.operatorParameter.y &&
             ast.childs.length === ast.operatorParameter.y &&
             ast.operatorParameter.y >= ast.operatorParameter.x;

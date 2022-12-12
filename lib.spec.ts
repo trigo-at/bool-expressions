@@ -18,7 +18,7 @@ const execute = (...executionPipeline) => (testInput) => {
     const [expression, state, expectedResult] = hasState
         ? testInput
         : [testInput[0], null, testInput[1]];
-    
+
     const spec = executionPipeline[executionPipeline.length - 1];
     it(`should ${spec.name} "${expression}" ${hasState ? `if ${state} `: ``} to be ${JSON.stringify(expectedResult, function (k, v) { return k && v && typeof v !== "number" ? (Array.isArray(v) ? "[object Array]" : "" + v) : v; })}`, () => {
         let result = pipe(...executionPipeline)(testInput[0]);
@@ -35,7 +35,7 @@ const execute = (...executionPipeline) => (testInput) => {
     });
 };
 
-const identifiers = (...tokenStrings: string[]): Token[] => 
+const identifiers = (...tokenStrings: string[]): Token[] =>
     tokenStrings.map(ts => lexicalAnalyzer.tokenize(ts)).reduce((p, cur) => [...p, ...cur]);
 
 const tokenize = lexicalAnalyzer.tokenize;
@@ -50,6 +50,7 @@ describe('Phase 1: Lexical Analysis', () => {
         ['   a  AND b    ', [[TT.identifier, 'a'], [TT.operator, 'AND'], [TT.identifier, 'b']]],
         ['(a AND b)', [[TT.separator, '('], [TT.identifier, 'a'], [TT.operator, 'AND'], [TT.identifier, 'b'], [TT.separator, ')']]],
         ['2/3 a b c', [[TT.operator, '2/3'], [TT.identifier, 'a'], [TT.identifier, 'b'], [TT.identifier, 'c']]],
+        ['11/13 a b c', [[TT.operator, '11/13'], [TT.identifier, 'a'], [TT.identifier, 'b'], [TT.identifier, 'c']]],
         ['((a AND b) OR (c AND d)) OR e', [[TT.separator, '('], [TT.separator, '('], [TT.identifier, 'a'], [TT.operator, 'AND'], [TT.identifier, 'b'], [TT.separator, ')'], [TT.operator, 'OR'], [TT.separator, '('], [TT.identifier, 'c'], [TT.operator, 'AND'], [TT.identifier, 'd'], [TT.separator, ')'], [TT.separator, ')'], [TT.operator, 'OR'], [TT.identifier, 'e']]],
         ['2/3 a b (1/2 c d)', [[TT.operator, '2/3'], [TT.identifier, 'a'], [TT.identifier, 'b'], [TT.separator, '('], [TT.operator, '1/2'], [TT.identifier, 'c'], [TT.identifier, 'd'], [TT.separator, ')']]],
         ['1/3 b ((3/4 c d e f) AND (g OR h))', [[TT.operator, '1/3'], [TT.identifier, 'b'], [TT.separator, '('], [TT.separator, '('], [TT.operator, '3/4'], [TT.identifier, 'c'], [TT.identifier, 'd'], [TT.identifier, 'e'], [TT.identifier, 'f'], [TT.separator, ')'], [TT.operator, 'AND'], [TT.separator, '('], [TT.identifier, 'g'], [TT.operator, 'OR'], [TT.identifier, 'h'], [TT.separator, ')'], [TT.separator, ')']]],
@@ -112,6 +113,9 @@ describe("Phase 2 - Syntax Validator", () => {
         ["2/3 a b ((3/4 c d e f) AND (g OR h))", true],
         ["2/3 a b ((3/4 c d e f) OR (g OR h))", true],
         ["(2/3 a b c) AND (d OR e)", true],
+        ["1/13 a b c d e f g h i j k l m", true],
+        ["11/13 a b c d e f g h i j k l m", true],
+        ["1/13 a b c d e f g h i j k l m n", false],
         ["(a AND b) OR (c AND d) OR (2/3 a b c)", true],
         ["a OR", false],
         ["a b c", false],
@@ -143,16 +147,16 @@ describe('Phase 2: Parser', () => {
             { operator: Op.and, childs: [
                 ...identifiers('a', 'b')]}]}],
         ['(a AND b) OR c',  { operator: Op.or, childs: [
-            { operator: Op.and, childs: identifiers('a', 'b')}, 
+            { operator: Op.and, childs: identifiers('a', 'b')},
             ...identifiers('c')]}],
         ['(a AND b) OR (NOT c)',  { operator: Op.or, childs: [
-            { operator: Op.and, childs: identifiers('a', 'b')}, 
+            { operator: Op.and, childs: identifiers('a', 'b')},
             { operator: Op.not, childs: identifiers('c')}]}],
         ['a AND (b OR c)', { operator: Op.and, childs: [
             ...identifiers('a'),
             { operator: Op.or, childs: identifiers('b', 'c') }]}],
         ['(a AND b) OR (c AND d)',  { operator: Op.or, childs: [
-            { operator: Op.and, childs: identifiers('a', 'b') }, 
+            { operator: Op.and, childs: identifiers('a', 'b') },
             { operator: Op.and, childs: identifiers('c', 'd') },  ]}],
         ['2/3 a b c', { operator: Op.xOfy, operatorParameter: { x: 2, y: 3 }, childs: [
             ...identifiers('a', 'b', 'c')]}],
@@ -160,7 +164,7 @@ describe('Phase 2: Parser', () => {
             ...identifiers('a', 'b'),
             {  operator: Op.and, childs: [ ...identifiers('c', 'd') ] }, ]}],
         ['((a AND b) OR (c AND d)) OR e', { operator: Op.or, childs: [
-            { operator: Op.or, childs: [                    
+            { operator: Op.or, childs: [
                 { operator: Op.and, childs: [
                     ...identifiers('a', 'b')]},
                 { operator: Op.and, childs: [
@@ -173,9 +177,9 @@ describe('Phase 2: Parser', () => {
         ['1/3 b ((3/4 c d e f) AND (g OR h))', { operator: Op.xOfy, operatorParameter: { x: 1, y: 3 }, childs: [
                 ...identifiers('b'),
                 { operator: Op.and, childs: [
-                    { operator: Op.xOfy, operatorParameter: { x: 3, y: 4 }, childs: 
+                    { operator: Op.xOfy, operatorParameter: { x: 3, y: 4 }, childs:
                         identifiers('c', 'd', 'e', 'f')},
-                    { operator: Op.or, childs: 
+                    { operator: Op.or, childs:
                         identifiers('g', 'h')}]}]}],
         ["a AND NOT b", { operator: Op.and, childs: [
             ...identifiers('a'),
@@ -199,12 +203,12 @@ describe('Phase 2: Parser', () => {
         ['a OR b OR c', { operator: Op.or, childs: [
             { operator: Op.or, childs: [
                 ...identifiers('a', 'b'),]},
-            ...identifiers('c'),            
+            ...identifiers('c'),
         ]}],
         ['a AND b AND c', { operator: Op.and, childs: [
             { operator: Op.and, childs: [
                 ...identifiers('a', 'b'),]},
-            ...identifiers('c'),            
+            ...identifiers('c'),
         ]}],
         // Highly questionable logic, legacy compatibility
         ['a AND b OR c', { operator: Op.or, childs: [
@@ -240,9 +244,9 @@ describe('Phase 5: Optimization', () => {
             { operator: Op.not, childs: identifiers('a') },
             { operator: Op.not, childs: identifiers('b') }, ]
         }],
-        ['NOT ((a AND b) OR c)', 
+        ['NOT ((a AND b) OR c)',
             { operator: Op.and, childs: [  // ((NOT a) OR (NOT b)) AND (NOT c)
-                { operator: Op.or, childs: [ 
+                { operator: Op.or, childs: [
                     { operator: Op.not, childs: identifiers('a') },
                     { operator: Op.not, childs: identifiers('b') },
                 ]},
@@ -414,6 +418,10 @@ describe("Runtime - with truth array input", () => {
         ],
         ["2/3 a b ((3/4 c d e f) OR (g OR h))", ["a", "c", "g"], true],
         ["(2/3 a b c) AND (d OR e)", ["a"], false],
+        ["3/13 a b c d e f g h i j k l m n", ["a", "b", "c", "d"], true],
+        ["3/13 a b c d e f g h i j k l m n", ["c", "d"], false],
+        ["11/13 a b c d e f g h i j k l m n", ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"], true],
+        ["11/13 a b c d e f g h i j k l m n", ["c", "d"], false],
         ["(a AND b) OR ((c AND d) OR (2/3 a b c))", ["b", "c"], true],
     ].forEach(execute(runtime.runWithTruthArray));
 });
